@@ -1,0 +1,24 @@
+[project]
+name = "hilbert"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "ujjawalM", email = "ujjawal.m.wal@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "ase>=3.29.0",
+    "mace-torch>=0.3.16",
+    "torch>=2.13.0",
+]
+
+[project.scripts]
+hilbert = "hilbert:main"
+
+[[tool.uv.index]]
+url = "https://download.pytorch.org/whl/cpu"
+
+[build-system]
+requires = ["uv_build>=0.12.1,<0.13.0"]
+build-backend = "uv_build"
