@@ -1,9 +1,9 @@
 """
 Logger module implemented using Python's native logging library.
 """
-import logging
-import datetime
 
+import datetime
+import logging
 
 
 def get_logfile_name(jobname):
@@ -25,9 +25,10 @@ def TextLogger(jobname="Job"):
     log_obj.setLevel(logging.INFO)
 
     if not log_obj.handlers:
-        file_handler = logging.FileHandler(log_filename, mode="a", encoding="utf-8")
+        file_handler = logging.FileHandler(
+            log_filename, mode="a", encoding="utf-8"
+        )
         log_obj.addHandler(file_handler)
-
 
     def log(message, pad=False, pad_below=False, timestamp=False):
         prefix = ""

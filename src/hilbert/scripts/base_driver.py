@@ -1,12 +1,14 @@
 """
 Example driver script to be used
-""" 
-import sys
+"""
+
 import argparse
+import sys
 
 
 JOBNAME = "MLFF Inference"
-    
+
+
 class ExampleDriver:
     def __init__(self, options, jobname):
         self.options = options
@@ -17,7 +19,6 @@ class ExampleDriver:
         self.doCalculation()
         self.doMoreCalculation()
         self.exportData()
-
 
     def initVariables(self):
         pass

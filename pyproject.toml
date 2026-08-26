@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 hilbert = "hilbert:main"
+hilbert-mlff = "hilbert.scripts.mlff_inference_driver:main"
 
 [[tool.uv.index]]
 url = "https://download.pytorch.org/whl/cpu"
@@ -22,3 +23,33 @@ url = "https://download.pytorch.org/whl/cpu"
 [build-system]
 requires = ["uv_build>=0.12.1,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.4",
+]
+
+[tool.ruff]
+line-length = 80
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort (import sorting)
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+]
+ignore = []
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+

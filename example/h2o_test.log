@@ -1,0 +1,15 @@
+Loading molecule from: strained_h2o.xyz
+Initializing MACE (small) MLFF...
+Starting relaxation (fmax threshold = 0.01 eV/Å)...
+      Step     Time          Energy          fmax
+BFGS:    0 18:37:25      -13.733236        4.895394
+BFGS:    1 18:37:26      -14.011981        1.729638
+BFGS:    2 18:37:26      -14.043575        0.357629
+BFGS:    3 18:37:26      -14.046870        0.290658
+BFGS:    4 18:37:26      -14.050771        0.217404
+BFGS:    5 18:37:26      -14.051479        0.057142
+BFGS:    6 18:37:26      -14.051504        0.010677
+BFGS:    7 18:37:26      -14.051505        0.000409
+Optimization finished in 7 steps.
+Final Potential Energy: -14.051505 eV
+Optimized structure saved to: h2o_test_optimized.xyz
