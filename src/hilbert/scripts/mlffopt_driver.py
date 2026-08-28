@@ -14,7 +14,7 @@ from hilbert.utilities import logger
 
 
 PROGRAM_NAME = "MLFF Geometry Optimization"
-JOBNAME = "mlff_geo_opt"
+JOBNAME = "mlff_opt"
 FLAG_JOBNAME = "-JOBNAME"
 
 

@@ -15,7 +15,9 @@ dependencies = [
 
 [project.scripts]
 hilbert = "hilbert:main"
-hilbert-mlff = "hilbert.scripts.mlff_inference_driver:main"
+hilbert-mlffopt = "hilbert.scripts.mlffopt_driver:main"
+hilbert-xtbmd = "hilbert.scripts.xtbmd_driver:main"
+hilbert-xtbopt = "hilbert.scripts.xtbopt_driver:main"
 
 [[tool.uv.index]]
 url = "https://download.pytorch.org/whl/cpu"
