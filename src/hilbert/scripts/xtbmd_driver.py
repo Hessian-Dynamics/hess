@@ -409,6 +409,15 @@ def main(args=None):
     """
     if args is None:
         args = sys.argv[1:]
+
+    # If launched from user shell, dispatch via JobServer infrastructure
+    if os.environ.get("_JOBSERVER_SANDBOX") != "1":
+        from jobserver import JobDispatcher
+
+        dispatcher = JobDispatcher()
+        dispatcher.launch("hilbert-xtbmd", args)
+        return
+
     parser = get_parser()
     options = parser.parse_args(args)
     jobname = options.jobname if options.jobname else JOBNAME
@@ -417,7 +426,6 @@ def main(args=None):
     log = logger.TextLogger(jobname)
     validate_options(options, parser)
 
-    log = logger.TextLogger(jobname)
     driver = XtbMDDriver(options, jobname)
     driver.run()
 

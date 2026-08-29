@@ -11,7 +11,11 @@ dependencies = [
     "ase>=3.29.0",
     "mace-torch>=0.3.16",
     "torch>=2.13.0",
+    "jobserver",
 ]
+
+[tool.uv.sources]
+jobserver = { path = "../jobserver", editable = true }
 
 [project.scripts]
 hilbert = "hilbert:main"

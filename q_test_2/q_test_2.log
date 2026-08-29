@@ -1,0 +1,6 @@
+Loading initial structure from: /Users/ujjawalm/hilbert/q_test_2/input.xyz
+Starting unbiased Molecular Dynamics simulation...
+Unbiased MD complete. Frames collected: 4
+Frames saved to: q_test_2_frames.trj
+Total output frames: 4
+Detailed run log saved to: q_test_2.log

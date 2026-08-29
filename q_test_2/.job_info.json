@@ -1,0 +1,28 @@
+{
+  "job_id": "q_test_2_20260829_144902",
+  "jobname": "q_test_2",
+  "driver": "hilbert-xtbmd",
+  "host": "localhost",
+  "cores": 4,
+  "threads": 4,
+  "subhost": "localhost",
+  "local_dir": "/Users/ujjawalm/hilbert/q_test_2",
+  "remote_dir": null,
+  "remote_pid": null,
+  "local_pid": 20637,
+  "status": "COMPLETED",
+  "submitted_at": "2026-08-29T14:49:02.893870",
+  "completed_at": "2026-08-29T14:49:25.268597",
+  "input_files": [
+    "example/md_run/input.xyz"
+  ],
+  "driver_args": [
+    "-i",
+    "input.xyz",
+    "-time",
+    "0.2",
+    "-skip_mtd",
+    "-JOBNAME",
+    "q_test_2"
+  ]
+}
