@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from hilbert.utilities import fileutils, logger, xtb_core
+from hess.utilities import fileutils, logger, xtb_core
 
 
 PROGRAM_NAME = "xTB Molecular Dynamics"
@@ -415,7 +415,7 @@ def main(args=None):
         from jobserver import JobDispatcher
 
         dispatcher = JobDispatcher()
-        dispatcher.launch("hilbert-xtbmd", args)
+        dispatcher.launch("hess-xtbmd", args)
         return
 
     parser = get_parser()

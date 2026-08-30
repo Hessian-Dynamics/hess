@@ -8,7 +8,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from hilbert.utilities import logger
+from hess.utilities import logger
 
 
 HARTREE_TO_EV = 27.211386245988

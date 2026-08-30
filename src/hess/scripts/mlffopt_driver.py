@@ -10,7 +10,7 @@ from ase.io import read, write
 from ase.optimize import BFGS
 from mace.calculators import mace_mp
 
-from hilbert.utilities import logger
+from hess.utilities import logger
 
 
 PROGRAM_NAME = "MLFF Geometry Optimization"

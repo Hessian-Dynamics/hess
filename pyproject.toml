@@ -1,5 +1,5 @@
 [project]
-name = "hilbert"
+name = "hess"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -18,10 +18,10 @@ dependencies = [
 jobserver = { path = "../jobserver", editable = true }
 
 [project.scripts]
-hilbert = "hilbert:main"
-hilbert-mlffopt = "hilbert.scripts.mlffopt_driver:main"
-hilbert-xtbmd = "hilbert.scripts.xtbmd_driver:main"
-hilbert-xtbopt = "hilbert.scripts.xtbopt_driver:main"
+hess = "hess:main"
+hess-mlffopt = "hess.scripts.mlffopt_driver:main"
+hess-xtbmd = "hess.scripts.xtbmd_driver:main"
+hess-xtbopt = "hess.scripts.xtbopt_driver:main"
 
 [[tool.uv.index]]
 url = "https://download.pytorch.org/whl/cpu"

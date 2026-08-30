@@ -193,7 +193,7 @@ wheels = [
 ]
 
 [[package]]
-name = "hilbert"
+name = "hess"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

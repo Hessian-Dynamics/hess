@@ -1,6 +1,0 @@
-Loading initial structure from: /Users/ujjawalm/hilbert/live_test_md/input.xyz
-Starting unbiased Molecular Dynamics simulation...
-Unbiased MD complete. Frames collected: 4
-Frames saved to: live_test_md_frames.trj
-Total output frames: 4
-Detailed run log saved to: live_test_md.log
