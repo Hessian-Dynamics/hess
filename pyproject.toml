@@ -12,6 +12,7 @@ dependencies = [
     "mace-torch>=0.3.16",
     "torch>=2.13.0",
     "jobserver",
+    "rdkit>=2023.9.1",
 ]
 
 [tool.uv.sources]
@@ -22,6 +23,7 @@ hess = "hess:main"
 hess-mlffopt = "hess.scripts.mlffopt_driver:main"
 hess-xtbmd = "hess.scripts.xtbmd_driver:main"
 hess-xtbopt = "hess.scripts.xtbopt_driver:main"
+hess-nanoreactor = "hess.scripts.xtb_nanoreactor:main"
 
 [[tool.uv.index]]
 url = "https://download.pytorch.org/whl/cpu"

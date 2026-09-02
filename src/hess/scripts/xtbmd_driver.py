@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from hess.utilities import fileutils, logger, xtb_core
+log = logger.TextLogger("xtb_md")
 
 
 PROGRAM_NAME = "xTB Molecular Dynamics"
@@ -16,38 +17,12 @@ FLAG_JOBNAME = "-JOBNAME"
 
 # Flag constants
 FLAG_INPUT = "-i"
-FLAG_TIME = "-time"
-FLAG_STEP = "-step"
-FLAG_TEMP = "-temp"
-FLAG_DUMP = "-dump"
-FLAG_NVT = "-nvt"
-FLAG_HMASS = "-hmass"
-FLAG_SHAKE = "-shake"
-FLAG_SCCACC = "-sccacc"
-FLAG_VELO = "-velo"
-FLAG_KPUSH = "-kpush"
-FLAG_ALP = "-alp"
-FLAG_MTD_SAVE = "-mtd_save"
 FLAG_SKIP_MD = "-skip_md"
 FLAG_SKIP_MTD = "-skip_mtd"
 FLAG_OPT_FRAMES = "-opt_frames"
-FLAG_SAMPLE_STRIDE = "-sample_stride"
 
 # Default constants
 DEFAULT_JOBNAME = "xtb_md"
-DEFAULT_TIME = 10.0
-DEFAULT_STEP = 1.0
-DEFAULT_TEMP = 300.0
-DEFAULT_DUMP = 50.0
-DEFAULT_NVT = 1
-DEFAULT_HMASS = 1
-DEFAULT_SHAKE = 0
-DEFAULT_SCCACC = 2.0
-DEFAULT_VELO = 0
-DEFAULT_KPUSH = 0.1
-DEFAULT_ALP = 0.6
-DEFAULT_MTD_SAVE = 50
-DEFAULT_SAMPLE_STRIDE = 1
 
 
 class XtbMDDriver(xtb_core.XTBCoreEngine):
@@ -60,7 +35,9 @@ class XtbMDDriver(xtb_core.XTBCoreEngine):
         Initialize XtbMDDriver instance.
 
         :param options: Parsed command-line argument namespace.
+        :type options: argparse.Namespace
         :param jobname: Job name identifier.
+        :type jobname: str
         """
         super().__init__(options, jobname)
         self.input_file = str(Path(self.options.input).resolve())
@@ -75,17 +52,15 @@ class XtbMDDriver(xtb_core.XTBCoreEngine):
         """
         self.initVariables()
 
-        md_out = None
         if not self.options.skip_md:
             with fileutils.chdir("md", create=True):
-                md_out = self.runMD()
+                self.doUnbiasedMD()
 
-        mtd_out = None
         if not self.options.skip_mtd:
             with fileutils.chdir("mtd", create=True):
-                mtd_out = self.runMTD()
+                self.doMetaDynamics()
 
-        self.frames = self.getCombinedFrames(md_out, mtd_out)
+        self.frames = self.getCombinedFrames(self.md_out, self.mtd_out)
         if self.options.opt_frames and self.frames:
             with fileutils.chdir("opt_frames", create=True):
                 self.frames = self.optFrames(self.frames)
@@ -100,77 +75,41 @@ class XtbMDDriver(xtb_core.XTBCoreEngine):
         log(f"Loading initial structure from: {self.input_file}")
         self.verifyXTBInstallation()
 
-    def createMDControl(self, control_path, is_mtd=False):
-        """
-        Format and write xTB MD/MTD control deck.
-
-        :param control_path: Target path for control file.
-        :param is_mtd: True to include MetaDynamics block.
-        """
-        extra_options = ""
-        md_block = xtb_core.XTB_MD_CONTROL_TEMPLATE.format(
-            time=self.options.time,
-            step=self.options.step,
-            temp=self.options.temp,
-            dump=self.options.dump,
-            nvt=self.options.nvt,
-            hmass=self.options.hmass,
-            shake=self.options.shake,
-            sccacc=self.options.sccacc,
-            velo=self.options.velo,
-            extra_options=extra_options,
-        ).strip()
-
-        blocks = [md_block]
-        if is_mtd:
-            mtd_block = xtb_core.XTB_METADYN_TEMPLATE.format(
-                save=self.options.mtd_save,
-                kpush=self.options.kpush,
-                alp=self.options.alp,
-                extra_options="",
-            ).strip()
-            blocks.append(mtd_block)
-
-        control_content = "\n\n".join(blocks) + "\n"
-        with open(control_path, "w", encoding="utf-8") as f:
-            f.write(control_content)
-
-    def runMD(self):
+    def doUnbiasedMD(self):
         """
         Execute unbiased MD simulation.
 
         :return: XTBOutput object for the MD run or None.
+        :rtype: XTBOutput or None
         """
         if self.options.skip_md:
             return None
 
         log("Starting unbiased Molecular Dynamics simulation...")
-        control_path = "control_md.txt"
-        self.createMDControl(control_path, is_mtd=False)
-
-        cmd = self.getXTBCommand(self.input_file)
-        cmd.extend(["--md", "--input", control_path])
-        self.md_out = self.runOneXTB(cmd, logfn=f"{self.jobname}_md.log")
+        self.md_out = super().runMD(
+            self.input_file,
+            is_mtd=False,
+            logfn=f"{self.jobname}_md.log",
+        )
         num_frames = len(self.md_out.frames)
         log(f"Unbiased MD complete. Frames collected: {num_frames}")
         return self.md_out
 
-    def runMTD(self):
+    def doMetaDynamics(self):
         """
         Execute biased MetaDynamics simulation.
 
         :return: XTBOutput object for the MTD run or None.
+        :rtype: XTBOutput or None
         """
         if self.options.skip_mtd:
             return None
 
         log("Starting MetaDynamics (MTD) simulation...")
-        control_path = "control_mtd.txt"
-        self.createMDControl(control_path, is_mtd=True)
-
-        cmd = self.getXTBCommand(self.input_file)
-        cmd.extend(["--md", "--input", control_path])
-        self.mtd_out = self.runOneXTB(cmd, logfn=f"{self.jobname}_mtd.log")
+        self.mtd_out = super().runMTD(
+            self.input_file,
+            logfn=f"{self.jobname}_mtd.log",
+        )
         num_frames = len(self.mtd_out.frames)
         log(f"MetaDynamics complete. Frames collected: {num_frames}")
         return self.mtd_out
@@ -180,8 +119,11 @@ class XtbMDDriver(xtb_core.XTBCoreEngine):
         Merge frames from MD and MetaDynamics stages.
 
         :param md_out: XTBOutput from unbiased MD.
+        :type md_out: XTBOutput
         :param mtd_out: XTBOutput from MetaDynamics.
+        :type mtd_out: XTBOutput
         :return: List of all combined XYZ frame strings.
+        :rtype: list[str]
         """
         combined = []
         if md_out and md_out.frames:
@@ -195,7 +137,9 @@ class XtbMDDriver(xtb_core.XTBCoreEngine):
         Relax sampled trajectory frames into local minima conformers.
 
         :param frames: List of XYZ frame strings.
+        :type frames: list[str]
         :return: List of relaxed XYZ frame strings.
+        :rtype: list[str]
         """
         stride = max(1, self.options.sample_stride)
         sampled_frames = frames[::stride]
@@ -209,11 +153,7 @@ class XtbMDDriver(xtb_core.XTBCoreEngine):
             with open(temp_input, "w", encoding="utf-8") as f:
                 f.write(frame)
 
-            opt_out = self.runOpt(
-                str(temp_input),
-                optlevel=self.options.optlevel,
-                maxcycle=self.options.maxcycle,
-            )
+            opt_out = self.runOpt(str(temp_input))
             if opt_out.success and opt_out.opt_fpath:
                 with open(opt_out.opt_fpath, encoding="utf-8") as f:
                     opt_list.append(f.read())
@@ -250,8 +190,9 @@ def get_parser():
     Build parser extending core electronic options with MD flags.
 
     :return: Configured argparse.ArgumentParser object.
+    :rtype: argparse.ArgumentParser
     """
-    parser = xtb_core.get_parser()
+    parser = xtb_core.get_md_parser()
 
     # Input & Identification
     parser.add_argument(
@@ -267,97 +208,6 @@ def get_parser():
         type=str,
         default=DEFAULT_JOBNAME,
         help="Job name identifier (default: xtb_md)",
-    )
-
-    # MD Parameters
-    parser.add_argument(
-        FLAG_TIME,
-        dest="time",
-        type=float,
-        default=DEFAULT_TIME,
-        help="MD simulation duration in ps (default: 10.0)",
-    )
-    parser.add_argument(
-        FLAG_STEP,
-        dest="step",
-        type=float,
-        default=DEFAULT_STEP,
-        help="MD integration time step in fs (default: 1.0)",
-    )
-    parser.add_argument(
-        FLAG_TEMP,
-        dest="temp",
-        type=float,
-        default=DEFAULT_TEMP,
-        help="MD thermostat temperature in K (default: 300.0)",
-    )
-    parser.add_argument(
-        FLAG_DUMP,
-        dest="dump",
-        type=float,
-        default=DEFAULT_DUMP,
-        help="Trajectory snapshot dump interval in fs (default: 50.0)",
-    )
-    parser.add_argument(
-        FLAG_NVT,
-        dest="nvt",
-        type=int,
-        choices=[0, 1],
-        default=DEFAULT_NVT,
-        help="Thermostat ensemble: 1 for NVT (default), 0 for NVE",
-    )
-    parser.add_argument(
-        FLAG_HMASS,
-        dest="hmass",
-        type=int,
-        default=DEFAULT_HMASS,
-        help="Hydrogen mass repartitioning in amu (default: 1)",
-    )
-    parser.add_argument(
-        FLAG_SHAKE,
-        dest="shake",
-        type=int,
-        choices=[0, 1, 2],
-        default=DEFAULT_SHAKE,
-        help="SHAKE constraints: 0=off, 1=X-H, 2=all bonds (default: 0)",
-    )
-    parser.add_argument(
-        FLAG_SCCACC,
-        dest="sccacc",
-        type=float,
-        default=DEFAULT_SCCACC,
-        help="SCC accuracy level in MD (default: 2.0)",
-    )
-    parser.add_argument(
-        FLAG_VELO,
-        dest="velo",
-        type=int,
-        choices=[0, 1],
-        default=DEFAULT_VELO,
-        help="1 to include velocities in trajectory dumps (default: 0)",
-    )
-
-    # MetaDynamics Parameters
-    parser.add_argument(
-        FLAG_KPUSH,
-        dest="kpush",
-        type=float,
-        default=DEFAULT_KPUSH,
-        help="Pushing force constant in au (default: 0.1)",
-    )
-    parser.add_argument(
-        FLAG_ALP,
-        dest="alp",
-        type=float,
-        default=DEFAULT_ALP,
-        help="Gaussian width parameter in Å^-2 (default: 0.6)",
-    )
-    parser.add_argument(
-        FLAG_MTD_SAVE,
-        dest="mtd_save",
-        type=int,
-        default=DEFAULT_MTD_SAVE,
-        help="Maximum saved structures for RMSD bias potential (default: 50)",
     )
 
     # Workflow Control Flags
@@ -379,13 +229,6 @@ def get_parser():
         action="store_true",
         help="Optimize sampled trajectory frames into conformers",
     )
-    parser.add_argument(
-        FLAG_SAMPLE_STRIDE,
-        dest="sample_stride",
-        type=int,
-        default=DEFAULT_SAMPLE_STRIDE,
-        help="Stride interval for sampling frames to optimize (default: 1)",
-    )
 
     return parser
 
@@ -395,7 +238,9 @@ def validate_options(options, parser):
     Validate argument values and file paths.
 
     :param options: Parsed options namespace.
+    :type options: argparse.Namespace
     :param parser: Argument parser instance.
+    :type parser: argparse.ArgumentParser
     """
     if not os.path.exists(options.input):
         parser.error(f"Input file '{options.input}' does not exist.")
@@ -406,6 +251,7 @@ def main(args=None):
     CLI entrypoint for xTB MD driver.
 
     :param args: Optional argument list.
+    :type args: list[str]
     """
     if args is None:
         args = sys.argv[1:]
