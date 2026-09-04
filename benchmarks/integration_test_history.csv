@@ -1,0 +1,4 @@
+Timestamp,Git_Commit,Molecule,Formula,Domain,Wall_Time_s,Num_Nodes,Num_Products,Num_Edges,Num_TS,Min_Ea_eV,Max_Ea_eV,Detailed_Balance_Err_eV,Charge_Consistent,Key_Pathway_Found,Status
+2026-09-04 18:43:35,09f01fa,Cyclobutene,C4H6,Pericyclic / Electrocyclic Opening,403.45,3,2,4,4,-0.0009,6.4362,2.348,True,True,Success
+2026-09-04 18:43:35,09f01fa,Quadricyclane,C7H8,Solar Thermal Energy Storage,723.18,7,6,7,7,0.0,5.8567,0.0,True,False,Success
+2026-09-04 18:43:35,09f01fa,Formamide,CH3NO,Prebiotic / Peptide Synthesis,167.68,3,2,4,4,0.2888,6.2356,5.7849,True,False,Success

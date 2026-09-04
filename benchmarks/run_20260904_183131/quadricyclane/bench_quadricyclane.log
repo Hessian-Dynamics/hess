@@ -1,0 +1,18 @@
+Loading initial nanoreactor from: /Users/ujjawalm/hess/quadricyclane.xyz
+Optimizing starting reactant for reference state...
+Reference reactant optimized successfully.
+Initializing 4 replicate worker(s)...
+Dispatching 4 replicates on 2 worker(s)...
+Merging local sub-graphs into Master Reaction Network...
+Master Graph finalized: 7 nodes, 7 edges.
+Refining with engine: sevennet
+Sorted nodes by refined ground-state energy.
+Starting TS Search using method: sella_neb
+Searching TS for Edge: [H]C1([H])[C@]2([H])[C@@]3([H])[C@]2([H])[C@@]2([H])[C@]1([H])[C@]23[H] -> [H]C1=C([H])[C@@]2([H])[C@@]3([H])[C@@]([H])(C1([H])[H])[C@@]23[H]
+Searching TS for Edge: [H]C1([H])[C@]2([H])[C@@]3([H])[C@]2([H])[C@@]2([H])[C@]1([H])[C@]23[H] -> [H]C1=C([H])C([H])=C([H])C([H])([H])C([H])=C1[H]
+Searching TS for Edge: [H]C1([H])[C@]2([H])[C@@]3([H])[C@]2([H])[C@@]2([H])[C@]1([H])[C@]23[H] -> [H]C1([H])[C@]2([H])[C][C@]3([H])[C@@]1([H])[C@]3([H])C2([H])[H]
+Searching TS for Edge: [H]C1=C([H])C([H])=C([H])C([H])([H])C([H])=C1[H] -> [H]C1=C([H])[C@@]2([H])C([H])([H])[C@@]2([H])C([H])=C1[H]
+Searching TS for Edge: [H]C1=C([H])[C@@]2([H])C([H])([H])[C@@]2([H])C([H])=C1[H] -> [H]C1=C([H])C([H])=C([H])C([H])([H])C([H])=C1[H]
+Searching TS for Edge: [H]C1([H])[C@]2([H])[C][C@]3([H])[C@@]1([H])[C@]3([H])C2([H])[H] -> [H][C-]1C([H])([H])[C@@]2([H])[C+]3[C@]1([H])[C@@]3([H])C2([H])[H]
+Searching TS for Edge: [H][C-]1C([H])([H])[C@@]2([H])[C+]3[C@]1([H])[C@@]3([H])C2([H])[H] -> [H]C1=C([H])C([H])([H])[C@@]2([H])C1=C([H])C2([H])[H]
+Exported Reaction Network: bench_quadricyclane_network.json, bench_quadricyclane_nodes.xyz, bench_quadricyclane_nodes.sdf

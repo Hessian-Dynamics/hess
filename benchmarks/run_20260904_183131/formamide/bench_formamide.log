@@ -1,0 +1,15 @@
+Loading initial nanoreactor from: /Users/ujjawalm/hess/formamide.xyz
+Optimizing starting reactant for reference state...
+Reference reactant optimized successfully.
+Initializing 4 replicate worker(s)...
+Dispatching 4 replicates on 2 worker(s)...
+Merging local sub-graphs into Master Reaction Network...
+Master Graph finalized: 3 nodes, 4 edges.
+Refining with engine: sevennet
+Sorted nodes by refined ground-state energy.
+Starting TS Search using method: sella_neb
+Searching TS for Edge: [H]C(=O)N([H])[H] -> [H]/N=C(\[H])O[H]
+Searching TS for Edge: [H]/N=C(\[H])O[H] -> [H]/N=C(/[H])O[H]
+Searching TS for Edge: [H]/N=C(/[H])O[H] -> [H]/N=C(\[H])O[H]
+Searching TS for Edge: [H]/N=C(/[H])O[H] -> [H]C(=O)N([H])[H]
+Exported Reaction Network: bench_formamide_network.json, bench_formamide_nodes.xyz, bench_formamide_nodes.sdf

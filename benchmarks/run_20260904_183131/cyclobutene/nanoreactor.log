@@ -1,0 +1,14 @@
+Root Reactant Node: [H]C1=C([H])C([H])([H])C1([H])[H]
+Rep 1: [H]C1=C([H])C([H])([H])C1([H])[H] -> [H]C([H])=C([H])C([H])=C([H])[H]
+Graph constructed: 2 unique nodes, 1 physical edges observed.
+Root Reactant Node: [H]C1=C([H])C([H])([H])C1([H])[H]
+Rep 1: [H]C1=C([H])C([H])([H])C1([H])[H] -> [H]C([H])=C([H])C([H])=C([H])[H]
+Rep 1: [H]C([H])=C([H])C([H])=C([H])[H] -> [H]C1=C([H])C([H])([H])C1([H])[H]
+Graph constructed: 2 unique nodes, 2 physical edges observed.
+Root Reactant Node: [H]C1=C([H])C([H])([H])C1([H])[H]
+Rep 1: [H]C1=C([H])C([H])([H])C1([H])[H] -> [H][C+]1C([H])([H])[C-]([H])C1([H])[H]
+Rep 1: [H][C+]1C([H])([H])[C-]([H])C1([H])[H] -> [H]C1=C([H])C([H])([H])C1([H])[H]
+Graph constructed: 2 unique nodes, 2 physical edges observed.
+Root Reactant Node: [H]C1=C([H])C([H])([H])C1([H])[H]
+Rep 1: [H]C1=C([H])C([H])([H])C1([H])[H] -> [H]C([H])=C([H])C([H])=C([H])[H]
+Graph constructed: 2 unique nodes, 1 physical edges observed.

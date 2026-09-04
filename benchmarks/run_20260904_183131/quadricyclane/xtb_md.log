@@ -1,0 +1,40 @@
+Loading initial structure from: /Users/ujjawalm/hess/benchmarks/run_20260904_183131/quadricyclane/rep_1/rep_1_input.xyz
+Loading initial structure from: /Users/ujjawalm/hess/benchmarks/run_20260904_183131/quadricyclane/rep_2/rep_2_input.xyz
+Starting unbiased Molecular Dynamics simulation...
+Starting unbiased Molecular Dynamics simulation...
+Unbiased MD complete. Frames collected: 200
+Starting MetaDynamics (MTD) simulation...
+Unbiased MD complete. Frames collected: 200
+Starting MetaDynamics (MTD) simulation...
+MetaDynamics complete. Frames collected: 200
+Optimizing 400 sampled trajectory frames...
+MetaDynamics complete. Frames collected: 200
+Optimizing 400 sampled trajectory frames...
+Frame optimization finished. Relaxed conformers: 400
+Frames saved to: rep_1_frames.trj
+Total output frames: 400
+Detailed run log saved to: rep_1.log
+Loading initial structure from: /Users/ujjawalm/hess/benchmarks/run_20260904_183131/quadricyclane/rep_3/rep_3_input.xyz
+Starting unbiased Molecular Dynamics simulation...
+Frame optimization finished. Relaxed conformers: 400
+Frames saved to: rep_2_frames.trj
+Total output frames: 400
+Detailed run log saved to: rep_2.log
+Loading initial structure from: /Users/ujjawalm/hess/benchmarks/run_20260904_183131/quadricyclane/rep_4/rep_4_input.xyz
+Starting unbiased Molecular Dynamics simulation...
+Unbiased MD complete. Frames collected: 200
+Starting MetaDynamics (MTD) simulation...
+Unbiased MD complete. Frames collected: 200
+Starting MetaDynamics (MTD) simulation...
+MetaDynamics complete. Frames collected: 200
+Optimizing 400 sampled trajectory frames...
+MetaDynamics complete. Frames collected: 200
+Optimizing 400 sampled trajectory frames...
+Frame optimization finished. Relaxed conformers: 400
+Frames saved to: rep_3_frames.trj
+Total output frames: 400
+Detailed run log saved to: rep_3.log
+Frame optimization finished. Relaxed conformers: 400
+Frames saved to: rep_4_frames.trj
+Total output frames: 400
+Detailed run log saved to: rep_4.log

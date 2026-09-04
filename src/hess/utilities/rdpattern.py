@@ -1,5 +1,6 @@
 import io
 
+from ase.io import write
 from rdkit import Chem
 from rdkit.Chem import rdDetermineBonds
 
@@ -17,8 +18,6 @@ def atoms_to_rdkit_mol(struct, charge=0):
     :rtype: rdkit.Chem.Mol
     """
     with io.StringIO() as buffer:
-        from ase.io import write
-
         write(buffer, struct, format="xyz")
         xyz_block = buffer.getvalue()
 

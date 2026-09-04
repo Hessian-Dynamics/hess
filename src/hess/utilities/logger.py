@@ -4,6 +4,7 @@ Logger module implemented using Python's native logging library.
 
 import datetime
 import logging
+import sys
 
 
 def get_logfile_name(jobname):
@@ -48,4 +49,14 @@ def TextLogger(jobname="Job"):
             for h in log_obj.handlers:
                 h.stream.write("\n")
 
+    def log_error(message, exit_code=1):
+        """Log a fatal error message and exit the program."""
+        prefix = datetime.datetime.now().strftime(
+            "[%Y-%m-%d %H:%M:%S] [FATAL] "
+        )
+        formatted_message = f"{prefix}{message}"
+        log_obj.error(formatted_message)
+        sys.exit(exit_code)
+
+    log.error = log_error
     return log

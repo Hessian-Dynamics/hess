@@ -1,0 +1,5 @@
+$opt
+   engine=lbfgs
+   maxcycle=250
+   microcycle=25
+$end

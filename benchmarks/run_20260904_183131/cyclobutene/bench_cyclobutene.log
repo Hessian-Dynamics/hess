@@ -1,0 +1,15 @@
+Loading initial nanoreactor from: /Users/ujjawalm/hess/cyclobutene.xyz
+Optimizing starting reactant for reference state...
+Reference reactant optimized successfully.
+Initializing 4 replicate worker(s)...
+Dispatching 4 replicates on 2 worker(s)...
+Merging local sub-graphs into Master Reaction Network...
+Master Graph finalized: 3 nodes, 4 edges.
+Refining with engine: sevennet
+Sorted nodes by refined ground-state energy.
+Starting TS Search using method: sella_neb
+Searching TS for Edge: [H]C1=C([H])C([H])([H])C1([H])[H] -> [H]C([H])=C([H])C([H])=C([H])[H]
+Searching TS for Edge: [H]C1=C([H])C([H])([H])C1([H])[H] -> [H][C+]1C([H])([H])[C-]([H])C1([H])[H]
+Searching TS for Edge: [H]C([H])=C([H])C([H])=C([H])[H] -> [H]C1=C([H])C([H])([H])C1([H])[H]
+Searching TS for Edge: [H][C+]1C([H])([H])[C-]([H])C1([H])[H] -> [H]C1=C([H])C([H])([H])C1([H])[H]
+Exported Reaction Network: bench_cyclobutene_network.json, bench_cyclobutene_nodes.xyz, bench_cyclobutene_nodes.sdf

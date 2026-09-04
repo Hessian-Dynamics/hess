@@ -1,0 +1,18 @@
+Root Reactant Node: [H]C(=O)N([H])[H]
+Rep 1: [H]C(=O)N([H])[H] -> [H]/N=C(\[H])O[H]
+Rep 1: [H]/N=C(\[H])O[H] -> [H]/N=C(/[H])O[H]
+Rep 1: [H]/N=C(/[H])O[H] -> [H]/N=C(\[H])O[H]
+Rep 1: [H]/N=C(/[H])O[H] -> [H]C(=O)N([H])[H]
+Graph constructed: 3 unique nodes, 4 physical edges observed.
+Root Reactant Node: [H]C(=O)N([H])[H]
+Rep 1: [H]C(=O)N([H])[H] -> [H]/N=C(\[H])O[H]
+Rep 1: [H]/N=C(\[H])O[H] -> [H]/N=C(/[H])O[H]
+Rep 1: [H]/N=C(/[H])O[H] -> [H]/N=C(\[H])O[H]
+Graph constructed: 3 unique nodes, 3 physical edges observed.
+Root Reactant Node: [H]C(=O)N([H])[H]
+Graph constructed: 1 unique nodes, 0 physical edges observed.
+Root Reactant Node: [H]C(=O)N([H])[H]
+Rep 1: [H]C(=O)N([H])[H] -> [H]/N=C(\[H])O[H]
+Rep 1: [H]/N=C(\[H])O[H] -> [H]/N=C(/[H])O[H]
+Rep 1: [H]/N=C(/[H])O[H] -> [H]/N=C(\[H])O[H]
+Graph constructed: 3 unique nodes, 3 physical edges observed.
