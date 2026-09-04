@@ -63,7 +63,12 @@ DEFAULT_PARAMS = {
 
 
 def get_git_commit():
-    """Retrieve current short git commit hash."""
+    """
+    Retrieve current short git commit hash.
+
+    :return: Short git commit SHA or 'unknown'.
+    :rtype: str
+    """
     try:
         out = subprocess.check_output(
             ["git", "rev-parse", "--short", "HEAD"], cwd=str(ROOT_DIR)
@@ -145,7 +150,14 @@ def run_single_benchmark(mol_meta, run_dir):
 
 
 def analyze_scientific_results(result):
-    """Perform scientific checks: charge, thermodynamics, and pathways."""
+    """
+    Perform scientific checks: charge, thermodynamics, and pathways.
+
+    :param result: Dictionary containing execution outputs and file paths.
+    :type result: dict
+    :return: Analyzed metrics and verification status dictionary.
+    :rtype: dict
+    """
     mol_dir = result["dir"]
     jobname = result["jobname"]
     meta = result["meta"]
@@ -173,8 +185,8 @@ def analyze_scientific_results(result):
         return analysis
 
     try:
-        with open(json_path, encoding="utf-8") as f:
-            net_data = json.load(f)
+        with open(json_path, encoding="utf-8") as json_file:
+            net_data = json.load(json_file)
 
         nodes = net_data.get("nodes", [])
         edges = net_data.get("edges", [])
@@ -184,7 +196,7 @@ def analyze_scientific_results(result):
         analysis["num_edges"] = len(edges)
 
         # 1. Transition State & Activation Energy Analysis
-        eas = [e["Ea"] for e in edges if e.get("Ea") is not None]
+        eas = [edge["Ea"] for edge in edges if edge.get("Ea") is not None]
         analysis["num_ts"] = len(eas)
         if eas:
             analysis["min_ea"] = min(eas)
@@ -193,21 +205,24 @@ def analyze_scientific_results(result):
         # 2. Detailed Balance Thermodynamic Verification
         # For reversible edge pairs (u -> v) and (v -> u):
         # Verification: |(Ea_fwd - Ea_rev) - (E_prod - E_react)| == 0
-        node_energies = {n["id"]: n.get("energy", 0.0) for n in nodes}
-        edge_dict = {(e["source"], e["target"]): e.get("Ea") for e in edges}
+        node_energies = {node["id"]: node.get("energy", 0.0) for node in nodes}
+        edge_dict = {
+            (edge["source"], edge["target"]): edge.get("Ea") for edge in edges
+        }
         db_errors = []
 
-        for (u, v), ea_uv in edge_dict.items():
+        for (source_node, target_node), ea_forward in edge_dict.items():
+            reverse_pair = (target_node, source_node)
             if (
-                (v, u) in edge_dict
-                and ea_uv is not None
-                and edge_dict[(v, u)] is not None
+                reverse_pair in edge_dict
+                and ea_forward is not None
+                and edge_dict[reverse_pair] is not None
             ):
-                ea_vu = edge_dict[(v, u)]
-                delta_e_rxn = node_energies.get(v, 0.0) - node_energies.get(
-                    u, 0.0
-                )
-                delta_ea = ea_uv - ea_vu
+                ea_reverse = edge_dict[reverse_pair]
+                delta_e_rxn = node_energies.get(
+                    target_node, 0.0
+                ) - node_energies.get(source_node, 0.0)
+                delta_ea = ea_forward - ea_reverse
                 db_errors.append(abs(delta_ea - delta_e_rxn))
 
         if db_errors:
@@ -226,14 +241,14 @@ def analyze_scientific_results(result):
         expected_smarts = meta.get("expected_product_smarts")
         if expected_smarts:
             query = Chem.MolFromSmarts(expected_smarts)
-            for n in nodes:
-                mol = Chem.MolFromSmiles(n["id"])
+            for node in nodes:
+                mol = Chem.MolFromSmiles(node["id"])
                 if mol and query and mol.HasSubstructMatch(query):
                     analysis["key_pathway_found"] = True
                     break
 
-    except Exception as e:
-        print(f"Error during scientific analysis of {meta['name']}: {e}")
+    except Exception as error:
+        print(f"Error during scientific analysis of {meta['name']}: {error}")
         analysis["status"] = "Analysis Error"
 
     return analysis
@@ -265,67 +280,83 @@ def append_history_csv(records):
         "Status",
     ]
 
-    with open(HISTORY_CSV, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=headers)
+    with open(HISTORY_CSV, "a", newline="", encoding="utf-8") as history_file:
+        writer = csv.DictWriter(history_file, fieldnames=headers)
         if not file_exists:
             writer.writeheader()
-        for r in records:
-            writer.writerow(r)
+        for record in records:
+            writer.writerow(record)
 
     print(f"\n[Registry] Saved {len(records)} row(s) to: {HISTORY_CSV.name}")
 
 
 def generate_markdown_report(run_dir, timestamp, git_commit, records):
-    """Generate comprehensive Markdown report with verification metrics."""
+    """
+    Generate comprehensive Markdown report with verification metrics.
+
+    :param run_dir: Destination path for report and run artifacts.
+    :type run_dir: pathlib.Path
+    :param timestamp: Execution run timestamp string.
+    :type timestamp: str
+    :param git_commit: Active Git commit SHA identifier.
+    :type git_commit: str
+    :param records: Sequence of benchmark analysis dictionaries.
+    :type records: list[dict]
+    """
     report_file = run_dir / "benchmark_report.md"
 
-    with open(report_file, "w", encoding="utf-8") as f:
-        f.write("# Hilbert Nanoreactor Integration Benchmark Report\n\n")
-        f.write(f"- **Execution Timestamp**: `{timestamp}`\n")
-        f.write(f"- **Git Commit**: `{git_commit}`\n")
-        f.write(f"- **Sandbox Directory**: `{run_dir}`\n\n")
+    with open(report_file, "w", encoding="utf-8") as markdown_file:
+        markdown_file.write(
+            "# Hilbert Nanoreactor Integration Benchmark Report\n\n"
+        )
+        markdown_file.write(f"- **Execution Timestamp**: `{timestamp}`\n")
+        markdown_file.write(f"- **Git Commit**: `{git_commit}`\n")
+        markdown_file.write(f"- **Sandbox Directory**: `{run_dir}`\n\n")
 
-        f.write("## Standard Execution Parameters\n")
-        for k, v in DEFAULT_PARAMS.items():
-            f.write(f"- **`{k}`**: `{v}`\n")
-        f.write("\n---\n\n")
+        markdown_file.write("## Standard Execution Parameters\n")
+        for param_key, param_value in DEFAULT_PARAMS.items():
+            markdown_file.write(f"- **`{param_key}`**: `{param_value}`\n")
+        markdown_file.write("\n---\n\n")
 
-        f.write("## Performance & Scientific Verification Results\n\n")
-        f.write(
+        markdown_file.write(
+            "## Performance & Scientific Verification Results\n\n"
+        )
+        markdown_file.write(
             "| Molecule | Formula | Time | Nodes | Edges | TS | "
             "Ea Range | DB Err | Charge | Key Rxn | Status |\n"
         )
-        f.write(
+        markdown_file.write(
             "| :--- | :--- | :---: | :---: | :---: | :---: | "
             ":---: | :---: | :---: | :---: | :--- |\n"
         )
 
-        for r in records:
+        for record in records:
             ea_str = (
-                f"{r['Min_Ea_eV']:.2f} - {r['Max_Ea_eV']:.2f}"
-                if r["Min_Ea_eV"] is not None
+                f"{record['Min_Ea_eV']:.2f} - {record['Max_Ea_eV']:.2f}"
+                if record["Min_Ea_eV"] is not None
                 else "N/A"
             )
-            chrg_icon = "✅" if r["Charge_Consistent"] else "❌"
-            rxn_icon = "✅" if r["Key_Pathway_Found"] else "⚠️"
-            f.write(
-                f"| **{r['Molecule']}** | `{r['Formula']}` | "
-                f"{r['Wall_Time_s']:.1f}s | "
-                f"{r['Num_Nodes']} | {r['Num_Edges']} | {r['Num_TS']} | "
-                f"{ea_str} | {r['Detailed_Balance_Err_eV']:.4f} | "
-                f"{chrg_icon} | {rxn_icon} | **{r['Status']}** |\n"
+            chrg_icon = "✅" if record["Charge_Consistent"] else "❌"
+            rxn_icon = "✅" if record["Key_Pathway_Found"] else "⚠️"
+            markdown_file.write(
+                f"| **{record['Molecule']}** | `{record['Formula']}` | "
+                f"{record['Wall_Time_s']:.1f}s | "
+                f"{record['Num_Nodes']} | {record['Num_Edges']} | "
+                f"{record['Num_TS']} | "
+                f"{ea_str} | {record['Detailed_Balance_Err_eV']:.4f} | "
+                f"{chrg_icon} | {rxn_icon} | **{record['Status']}** |\n"
             )
 
-        f.write("\n### Scientific Verification Notes\n")
-        f.write(
+        markdown_file.write("\n### Scientific Verification Notes\n")
+        markdown_file.write(
             "1. **Detailed Balance**: Measures $|(E_a^{\\text{fwd}} - "
             "E_a^{\\text{rev}}) - \\Delta E_{\\text{rxn}}|$.\n"
         )
-        f.write(
+        markdown_file.write(
             "2. **Charge Conservation**: Checks formal charge neutrality "
             "across all 3D SDF molecules.\n"
         )
-        f.write(
+        markdown_file.write(
             "3. **Key Reaction**: Confirms known transformations "
             "(Butadiene, Norbornadiene, Cracking).\n"
         )
@@ -406,13 +437,16 @@ def main():
     print("\n" + "=" * 78)
     print("BENCHMARK SUMMARY")
     print("=" * 78)
-    for r in csv_records:
+    for record in csv_records:
         print(
-            f"• {r['Molecule']} ({r['Formula']}): {r['Wall_Time_s']}s | "
-            f"Nodes: {r['Num_Nodes']} | Edges: {r['Num_Edges']} | "
-            f"TS: {r['Num_TS']} | DB Err: {r['Detailed_Balance_Err_eV']}eV | "
-            f"Chrg: {r['Charge_Consistent']} | Rxn: {r['Key_Pathway_Found']} | "
-            f"{r['Status']}"
+            f"• {record['Molecule']} ({record['Formula']}): "
+            f"{record['Wall_Time_s']}s | "
+            f"Nodes: {record['Num_Nodes']} | Edges: {record['Num_Edges']} | "
+            f"TS: {record['Num_TS']} | "
+            f"DB Err: {record['Detailed_Balance_Err_eV']}eV | "
+            f"Chrg: {record['Charge_Consistent']} | "
+            f"Rxn: {record['Key_Pathway_Found']} | "
+            f"{record['Status']}"
         )
     print("=" * 78)
 

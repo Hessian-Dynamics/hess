@@ -10,7 +10,9 @@ from hess.utilities.rdpattern import get_canonical_smiles
 
 
 class BaseReactionFilter(ABC):
-    """Abstract base class for all reaction event filters."""
+    """
+    Abstract base class for all reaction event filters.
+    """
 
     @abstractmethod
     def reset(self, initial_frame):

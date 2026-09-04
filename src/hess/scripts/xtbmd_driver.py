@@ -152,13 +152,13 @@ class XtbMDDriver(xtb_core.XTBCoreEngine):
         temp_input = Path("temp_frame_opt.xyz")
 
         for frame in sampled_frames:
-            with open(temp_input, "w", encoding="utf-8") as f:
-                f.write(frame)
+            with open(temp_input, "w", encoding="utf-8") as file_handle:
+                file_handle.write(frame)
 
             opt_out = self.runOpt(str(temp_input))
             if opt_out.success and opt_out.opt_fpath:
-                with open(opt_out.opt_fpath, encoding="utf-8") as f:
-                    opt_list.append(f.read())
+                with open(opt_out.opt_fpath, encoding="utf-8") as file_handle:
+                    opt_list.append(file_handle.read())
 
         if temp_input.exists():
             temp_input.unlink()
@@ -173,8 +173,8 @@ class XtbMDDriver(xtb_core.XTBCoreEngine):
         """
         if self.frames:
             trj_file = f"{self.jobname}_frames.trj"
-            with open(trj_file, "w", encoding="utf-8") as f:
-                f.write("".join(self.frames))
+            with open(trj_file, "w", encoding="utf-8") as file_handle:
+                file_handle.write("".join(self.frames))
             log(f"Frames saved to: {trj_file}")
 
     def exportData(self):

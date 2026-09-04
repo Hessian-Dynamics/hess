@@ -66,9 +66,9 @@ def write_sdf(mol_list, output_path, properties_list=None):
     :type properties_list: list[dict]
     """
     writer = Chem.SDWriter(str(output_path))
-    for i, mol in enumerate(mol_list):
-        if properties_list and i < len(properties_list):
-            props = properties_list[i]
+    for mol_index, mol in enumerate(mol_list):
+        if properties_list and mol_index < len(properties_list):
+            props = properties_list[mol_index]
             for key, val in props.items():
                 mol.SetProp(str(key), str(val))
         writer.write(mol)

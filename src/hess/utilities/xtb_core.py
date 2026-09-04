@@ -486,27 +486,27 @@ class XTBCoreEngine:
         :return: Path to created control file.
         :rtype: pathlib.Path
         """
-        opts = self.options
+        options = self.options
 
         md_block = XTB_MD_CONTROL_TEMPLATE.format(
-            time=opts.time,
-            step=opts.step,
-            temp=opts.temp,
-            dump=opts.dump,
-            nvt=opts.nvt,
-            hmass=opts.hmass,
-            shake=opts.shake,
-            sccacc=opts.sccacc,
-            velo=opts.velo,
+            time=options.time,
+            step=options.step,
+            temp=options.temp,
+            dump=options.dump,
+            nvt=options.nvt,
+            hmass=options.hmass,
+            shake=options.shake,
+            sccacc=options.sccacc,
+            velo=options.velo,
             extra_options="",
         ).strip()
 
         blocks = [md_block]
         if is_mtd:
             mtd_block = XTB_METADYN_TEMPLATE.format(
-                save=opts.mtd_save,
-                kpush=opts.kpush,
-                alp=opts.alp,
+                save=options.mtd_save,
+                kpush=options.kpush,
+                alp=options.alp,
                 extra_options="",
             ).strip()
             blocks.append(mtd_block)

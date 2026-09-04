@@ -40,17 +40,24 @@ def TextLogger(jobname="Job"):
         formatted_message = f"{prefix}{message}"
 
         if pad:
-            for h in log_obj.handlers:
-                h.stream.write("\n")
+            for log_handler in log_obj.handlers:
+                log_handler.stream.write("\n")
 
         log_obj.info(formatted_message)
 
         if pad_below:
-            for h in log_obj.handlers:
-                h.stream.write("\n")
+            for log_handler in log_obj.handlers:
+                log_handler.stream.write("\n")
 
     def log_error(message, exit_code=1):
-        """Log a fatal error message and exit the program."""
+        """
+        Log a fatal error message and exit the program.
+
+        :param message: Error message description to record.
+        :type message: str
+        :param exit_code: POSIX process exit code (default: 1).
+        :type exit_code: int
+        """
         prefix = datetime.datetime.now().strftime(
             "[%Y-%m-%d %H:%M:%S] [FATAL] "
         )

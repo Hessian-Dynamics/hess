@@ -36,6 +36,10 @@ log_error = log.error
 
 @dataclass
 class ReactionNode:
+    """
+    Data container representing a unique chemical state node in the graph.
+    """
+
     node_type: str
     conformers: list[ase.Atoms] = field(default_factory=list)
     geometry: ase.Atoms | None = None
@@ -44,6 +48,10 @@ class ReactionNode:
 
 @dataclass
 class ReactionEdge:
+    """
+    Data container representing a physical reaction transition edge.
+    """
+
     ea: float | None = None
     ts_structure: str | None = None
 
@@ -55,12 +63,27 @@ class ReactionNetworkBuilder:
     """
 
     def __init__(self, options):
+        """
+        Initialize the reaction network builder with filter options.
+
+        :param options: Parsed command-line argument namespace.
+        :type options: argparse.Namespace
+        """
         self.options = options
         self.master_graph = nx.DiGraph()
         self.rxn_filter = get_reaction_filter(options.rxn_filter, options)
 
     def buildFromTrajectories(self, reactant_atoms, trajectories):
-        """Parse multiple trajectories to construct the reaction network."""
+        """
+        Parse multiple trajectories to construct the reaction network.
+
+        :param reactant_atoms: Reference atomic structure of starting reactant.
+        :type reactant_atoms: ase.Atoms
+        :param trajectories: Sequence of trajectory frame collections.
+        :type trajectories: list[list[ase.Atoms]]
+        :return: Master reaction network directed graph.
+        :rtype: networkx.DiGraph
+        """
         start_state = self.rxn_filter.reset(reactant_atoms)
         if not start_state:
             raise ValueError("Failed to resolve state ID for reactant.")
@@ -74,9 +97,9 @@ class ReactionNetworkBuilder:
         log(f"Root Reactant Node: {start_state}")
 
         total_edges = 0
-        for i, traj in enumerate(trajectories):
+        for replicate_index, trajectory_frames in enumerate(trajectories):
             prev_state = self.rxn_filter.reset(reactant_atoms)
-            for frame in traj:
+            for frame in trajectory_frames:
                 has_changed, curr_state = self.rxn_filter.processFrame(frame)
 
                 if not has_changed or curr_state is None:
@@ -86,7 +109,10 @@ class ReactionNetworkBuilder:
                     self.master_graph.add_edge(
                         prev_state, curr_state, data=ReactionEdge()
                     )
-                    log(f"Rep {i + 1}: {prev_state} -> {curr_state}")
+                    log(
+                        f"Rep {replicate_index + 1}: "
+                        f"{prev_state} -> {curr_state}"
+                    )
                     total_edges += 1
 
                 if "data" not in self.master_graph.nodes[curr_state]:
@@ -106,33 +132,48 @@ class ReactionNetworkBuilder:
         return self.master_graph
 
     def mergeGraphs(self, local_graphs):
-        """Merge returned local graphs from workers into the Master Graph."""
+        """
+        Merge returned local graphs from workers into the Master Graph.
+
+        :param local_graphs: Sequence of local reaction network subgraphs.
+        :type local_graphs: list[networkx.DiGraph]
+        :return: Consolidated master reaction network graph.
+        :rtype: networkx.DiGraph
+        """
         log("Merging local sub-graphs into Master Reaction Network...")
 
-        valid_graphs = [g for g in local_graphs if g is not None]
+        valid_graphs = [
+            sub_graph for sub_graph in local_graphs if sub_graph is not None
+        ]
         if not valid_graphs:
             log("No valid trajectories to build network from.")
             return self.master_graph
 
         self.master_graph = copy.deepcopy(valid_graphs[0])
 
-        for g in valid_graphs[1:]:
-            for node, n_dict in g.nodes(data=True):
-                incoming_node = n_dict["data"]
-                if not self.master_graph.has_node(node):
+        for sub_graph in valid_graphs[1:]:
+            for node_name, node_attributes in sub_graph.nodes(data=True):
+                incoming_node = node_attributes["data"]
+                if not self.master_graph.has_node(node_name):
                     self.master_graph.add_node(
-                        node, data=copy.deepcopy(incoming_node)
+                        node_name, data=copy.deepcopy(incoming_node)
                     )
                 else:
-                    self.master_graph.nodes[node]["data"].conformers.extend(
-                        incoming_node.conformers
-                    )
+                    self.master_graph.nodes[node_name][
+                        "data"
+                    ].conformers.extend(incoming_node.conformers)
 
-            for u, v, e_dict in g.edges(data=True):
-                if not self.master_graph.has_edge(u, v):
-                    edge_data = e_dict.get("data", ReactionEdge())
+            for (
+                source_node,
+                target_node,
+                edge_attributes,
+            ) in sub_graph.edges(data=True):
+                if not self.master_graph.has_edge(source_node, target_node):
+                    edge_data = edge_attributes.get("data", ReactionEdge())
                     self.master_graph.add_edge(
-                        u, v, data=copy.deepcopy(edge_data)
+                        source_node,
+                        target_node,
+                        data=copy.deepcopy(edge_data),
                     )
 
         log(
@@ -149,6 +190,14 @@ class XtbNanoreactorDriver:
     """
 
     def __init__(self, options, jobname):
+        """
+        Initialize the nanoreactor orchestrator driver.
+
+        :param options: Parsed command-line argument namespace.
+        :type options: argparse.Namespace
+        :param jobname: Unique job name identifier.
+        :type jobname: str
+        """
         self.options = options
         self.jobname = jobname
         self.master_graph = None
@@ -156,7 +205,9 @@ class XtbNanoreactorDriver:
         self.reference_structure = None
 
     def run(self):
-        """Lifecycle execution sequence."""
+        """
+        Execute the complete nanoreactor discovery and refinement lifecycle.
+        """
         self.initVariables()
         self.dispatchReplicates()
 
@@ -173,7 +224,9 @@ class XtbNanoreactorDriver:
         self.exportData()
 
     def initVariables(self):
-        """Verify input files, validate tools, and optimize starting state."""
+        """
+        Verify input files, validate tools, and optimize starting state.
+        """
         log(f"Loading initial nanoreactor from: {self.options.input}")
 
         md_driver = xtbmd_driver.XtbMDDriver(self.options, "ref_opt")
@@ -192,18 +245,25 @@ class XtbNanoreactorDriver:
 
     @staticmethod
     def _runSingleReplicate(args):
-        """Static method to execute a single MD worker in isolation."""
-        idx, rep_dir, opts, struct = args
+        """
+        Static worker routine executing an isolated MD replicate.
+
+        :param args: Tuple containing (replicate_idx, dir, options, struct).
+        :type args: tuple[int, str, argparse.Namespace, ase.Atoms]
+        :return: Local reaction network graph discovered in this replicate.
+        :rtype: networkx.DiGraph
+        """
+        idx, rep_dir, options, struct = args
 
         with fileutils.chdir(rep_dir, create=True):
             input_xyz = os.path.abspath(f"rep_{idx}_input.xyz")
             ase.io.write(input_xyz, struct)
 
-            rep_opts = copy.deepcopy(opts)
-            rep_opts.input = input_xyz
-            rep_opts.opt_frames = True  # Force in-memory optimization
+            replicate_options = copy.deepcopy(options)
+            replicate_options.input = input_xyz
+            replicate_options.opt_frames = True  # Force in-memory optimization
 
-            driver = xtbmd_driver.XtbMDDriver(rep_opts, f"rep_{idx}")
+            driver = xtbmd_driver.XtbMDDriver(replicate_options, f"rep_{idx}")
             driver.struct = struct.copy()
             driver.run()
 
@@ -213,16 +273,23 @@ class XtbNanoreactorDriver:
                 frame_atoms = ase.io.read(io.StringIO(xyz_str), format="xyz")
                 frames.append(frame_atoms)
 
-            builder = ReactionNetworkBuilder(rep_opts)
+            builder = ReactionNetworkBuilder(replicate_options)
             return builder.buildFromTrajectories(struct, [frames])
 
     def dispatchReplicates(self):
-        """Spawn independent xTB MD replicates using parallel Pool."""
+        """
+        Spawn independent xTB MD replicates across multiprocessing pool.
+        """
         worker_args = []
-        for i in range(self.options.nreplicates):
-            rep_dir = os.path.abspath(f"rep_{i + 1}")
+        for replicate_index in range(self.options.nreplicates):
+            rep_dir = os.path.abspath(f"rep_{replicate_index + 1}")
             worker_args.append(
-                (i + 1, rep_dir, self.options, self.reference_structure)
+                (
+                    replicate_index + 1,
+                    rep_dir,
+                    self.options,
+                    self.reference_structure,
+                )
             )
 
         log(f"Initializing {self.options.nreplicates} replicate worker(s)...")
@@ -238,7 +305,9 @@ class XtbNanoreactorDriver:
         self.master_graph = builder.mergeGraphs(results)
 
     def refineNodes(self):
-        """Refine node geometries and select lowest energy conformer."""
+        """
+        Refine node geometries and select lowest energy conformer.
+        """
         nodes = list(self.master_graph.nodes(data=True))
 
         if not self.options.refine:
@@ -251,8 +320,8 @@ class XtbNanoreactorDriver:
 
         log(f"Refining with engine: {self.options.refine}")
         refiner = get_refiner(self.options.refine)
-        for _node_id, n_data in nodes:
-            node_obj = n_data["data"]
+        for node_identifier, node_attributes in nodes:
+            node_obj = node_attributes["data"]
             best_energy = float("inf")
             best_conformer = None
 
@@ -261,8 +330,11 @@ class XtbNanoreactorDriver:
                 try:
                     struct = refiner.runOptimization(struct)
                     energy = struct.get_potential_energy()
-                except Exception as e:
-                    log(f"Refinement failed for conformer of {_node_id}: {e}")
+                except Exception as error:
+                    log(
+                        "Refinement failed for conformer of "
+                        f"{node_identifier}: {error}"
+                    )
                     continue
 
                 if energy < best_energy:
@@ -277,18 +349,22 @@ class XtbNanoreactorDriver:
             node_obj.energy = best_energy
 
     def sortNodes(self):
-        """Sort the graph nodes based on CLI flags."""
+        """
+        Sort graph nodes based on configured command-line criteria.
+        """
         self.sorted_nodes = list(self.master_graph.nodes())
 
         if self.options.sort_by_energy and self.options.refine:
             self.sorted_nodes.sort(
-                key=lambda n: self.master_graph.nodes[n]["data"].energy
+                key=lambda node_key: (
+                    self.master_graph.nodes[node_key]["data"].energy
+                )
             )
             log("Sorted nodes by refined ground-state energy.")
         elif self.options.sort_by_frequency:
             self.sorted_nodes.sort(
-                key=lambda n: len(
-                    self.master_graph.nodes[n]["data"].conformers
+                key=lambda node_key: len(
+                    self.master_graph.nodes[node_key]["data"].conformers
                 ),
                 reverse=True,
             )
@@ -299,7 +375,9 @@ class XtbNanoreactorDriver:
             log("No sorting flag provided. Using default discovery order.")
 
     def searchTransitionStates(self):
-        """Compute Activation Energies (Ea) for Graph Edges."""
+        """
+        Compute Activation Energies (Ea) for all reaction network edges.
+        """
         log(f"Starting TS Search using method: {self.options.ts_search}")
         searcher = get_ts_searcher(self.options.ts_search, self.options)
 
@@ -324,11 +402,13 @@ class XtbNanoreactorDriver:
                     ase.io.write(buffer, ts_atoms, format="xyz")
                     edge_obj.ts_structure = buffer.getvalue()
 
-            except Exception as e:
-                log(f"TS Search failed for {source} -> {target}: {str(e)}")
+            except Exception as error:
+                log(f"TS Search failed for {source} -> {target}: {str(error)}")
 
     def exportData(self):
-        """Generate final output artifacts: JSON network, XYZ, and SDF."""
+        """
+        Generate final output artifacts: JSON network, XYZ, and SDF.
+        """
         if not self.sorted_nodes:
             log("No reaction network to export.")
             return
@@ -341,7 +421,7 @@ class XtbNanoreactorDriver:
         mols = []
         props_list = []
 
-        with open(xyz_fpath, "w", encoding="utf-8") as f_xyz:
+        with open(xyz_fpath, "w", encoding="utf-8") as xyz_file_stream:
             for node in self.sorted_nodes:
                 node_obj = self.master_graph.nodes[node]["data"]
                 energy = node_obj.energy
@@ -355,7 +435,7 @@ class XtbNanoreactorDriver:
 
                 lines = xyz_str.strip().split("\n")
                 lines[1] = f"SMILES:{node} Energy:{energy:.6f}eV"
-                f_xyz.write("\n".join(lines) + "\n")
+                xyz_file_stream.write("\n".join(lines) + "\n")
 
                 try:
                     rdmol = atoms_to_rdkit_mol(
@@ -369,14 +449,20 @@ class XtbNanoreactorDriver:
                             "Frequency": len(node_obj.conformers),
                         }
                     )
-                except Exception as e:
-                    log(f"Warning: Failed to convert {node} to SDF Mol: {e}")
+                except Exception as error:
+                    log(
+                        f"Warning: Failed to convert {node} to SDF Mol: {error}"
+                    )
 
-            for u, v, e_data in self.master_graph.edges(data=True):
-                edge_obj = e_data["data"]
+            for (
+                source_node,
+                target_node,
+                edge_attributes,
+            ) in self.master_graph.edges(data=True):
+                edge_obj = edge_attributes["data"]
                 export_graph.add_edge(
-                    u,
-                    v,
+                    source_node,
+                    target_node,
                     Ea=edge_obj.ea,
                     ts_structure=edge_obj.ts_structure,
                 )
@@ -384,8 +470,12 @@ class XtbNanoreactorDriver:
         if mols:
             write_sdf(mols, sdf_fpath, properties_list=props_list)
 
-        with open(json_fpath, "w", encoding="utf-8") as f_json:
-            json.dump(json_graph.node_link_data(export_graph), f_json, indent=2)
+        with open(json_fpath, "w", encoding="utf-8") as json_file_stream:
+            json.dump(
+                json_graph.node_link_data(export_graph),
+                json_file_stream,
+                indent=2,
+            )
 
         log(
             f"Exported Reaction Network: {json_fpath}, {xyz_fpath}, {sdf_fpath}"
@@ -393,7 +483,14 @@ class XtbNanoreactorDriver:
 
 
 def add_sorting_arguments(parser):
-    """Register conformer and graph sorting arguments."""
+    """
+    Register conformer and graph sorting arguments.
+
+    :param parser: Target ArgumentParser instance.
+    :type parser: argparse.ArgumentParser
+    :return: Configured ArgumentParser instance.
+    :rtype: argparse.ArgumentParser
+    """
     parser.add_argument(
         FLAG_SORT_DISCOVERY,
         dest="sort_by_discovery",
@@ -415,7 +512,12 @@ def add_sorting_arguments(parser):
 
 
 def get_parser():
-    """Build argument parser composing MD, Orchestrator, and Sorting flags."""
+    """
+    Build argument parser composing MD, Orchestrator, and Sorting flags.
+
+    :return: Configured ArgumentParser instance.
+    :rtype: argparse.ArgumentParser
+    """
     parser = xtbmd_driver.get_parser()
 
     parser.add_argument(
@@ -479,7 +581,14 @@ def get_parser():
 
 
 def validate_options(options, parser):
-    """Validate argument values for the orchestrator layer."""
+    """
+    Validate argument values for the orchestrator layer.
+
+    :param options: Parsed command-line argument namespace.
+    :type options: argparse.Namespace
+    :param parser: Active ArgumentParser instance.
+    :type parser: argparse.ArgumentParser
+    """
     xtbmd_driver.validate_options(options, parser)
 
     if options.workers is None:
@@ -497,7 +606,12 @@ def validate_options(options, parser):
 
 
 def main(args=None):
-    """Entrypoint for the nanoreactor orchestrator."""
+    """
+    Entrypoint for the nanoreactor orchestrator.
+
+    :param args: Optional command-line argument list.
+    :type args: list[str] or None
+    """
     if args is None:
         args = sys.argv[1:]
 
